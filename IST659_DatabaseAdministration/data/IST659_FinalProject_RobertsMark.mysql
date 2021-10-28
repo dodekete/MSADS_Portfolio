@@ -1,0 +1,462 @@
+-- Physical Database Design: Repeatable Script Drops/Creates Table According to Order of Dependency
+
+-- Drop views
+DROP VIEW IF EXISTS CommunityHomes;
+GO
+DROP VIEW IF EXISTS OwnersList;
+GO
+DROP VIEW IF EXISTS BuyersList;
+GO
+DROP VIEW IF EXISTS Sales;
+GO
+DROP VIEW IF EXISTS TotalAskingPriceByCommunity;
+GO
+DROP VIEW IF EXISTS HomesInventorybyBathrooms;
+GO
+DROP VIEW IF EXISTS TotalSales;
+GO
+
+
+-- Drop Table Statements
+
+DROP TABLE IF EXISTS SaleTransaction;  
+GO
+DROP TABLE IF EXISTS Buyers; 
+GO
+DROP TABLE IF EXISTS Owners; 
+GO
+DROP TABLE IF EXISTS AmenityTypeList;
+GO
+DROP TABLE IF EXISTS Homes;
+GO
+DROP TABLE IF EXISTS CommunitySalesTeam;
+GO
+DROP TABLE IF EXISTS Community;
+GO
+DROP TABLE IF EXISTS SalesTeam; 
+GO
+DROP TABLE IF EXISTS BedroomType;
+GO
+DROP TABLE IF EXISTS Contact;
+GO
+DROP TABLE IF EXISTS AmenityProfiles;
+GO
+
+-- Create Table Statements, creating columns and constraints where indicated.
+CREATE TABLE AmenityProfiles (
+	AmenityProfilesID int identity,
+	AmenityProfileName varchar(20) not null,
+	NumberCars varchar(5) not null,
+	SwimmingPool bit not null,
+	AdditionalKitchen bit not null
+	CONSTRAINT PK_AmenityProfiles PRIMARY KEY (AmenityProfilesID)
+	);
+	GO
+
+CREATE TABLE Contact (
+	ContactID int identity,
+	FirstName varchar(20) not null,
+	LastName varchar(20) not null,
+	EmailAddress varchar(20) not null,
+	PhoneNumber varchar(20)
+	-- Contraints
+	CONSTRAINT PK_Contact PRIMARY KEY (ContactID),
+	CONSTRAINT U1_Contact UNIQUE (EmailAddress)
+	);
+	GO
+
+CREATE TABLE BedroomType (
+	BedroomTypeID int identity,
+	NumberBedrooms varchar(10) not null
+	CONSTRAINT PK_BedroomType PRIMARY KEY (BedroomTypeID),
+	CONSTRAINT U1_BedroomType UNIQUE (NumberBedrooms)
+	);
+	GO
+
+CREATE TABLE SalesTeam (
+	SalesTeamID int identity,
+	SalesTeamName varchar(50) not null,
+	CommunityID int null,
+	ContactID int null
+	CONSTRAINT PK_SalesTeam PRIMARY KEY (SalesTeamID),
+	CONSTRAINT FK1_SalesTeam FOREIGN KEY (ContactID) REFERENCES Contact(ContactID)
+	);
+	GO
+
+CREATE TABLE Community (
+	CommunityID int identity,
+	CommunityName varchar(20) not null,
+	CommunityType varchar(20) not null,
+	CommunityLocation varchar(20) not null,
+	NumberHomes int
+	CONSTRAINT PK_Communities PRIMARY KEY (CommunityID)
+	);
+	GO
+
+CREATE TABLE CommunitySalesTeam (
+	CommunitySalesTeamID int identity,
+	CommunityId int null,
+	SalesTeamID int null,
+	CONSTRAINT PK_CommunitySalesTeam PRIMARY KEY (CommunitySalesTeamID),
+	CONSTRAINT FK1_CommunitySalesTeam FOREIGN KEY (CommunityID) REFERENCES Community(CommunityID),
+	CONSTRAINT FK2_CommunitySalesTeam FOREIGN KEY (SalesTeamID) REFERENCES SalesTeam(SalesTeamID),
+	);
+	GO
+
+CREATE TABLE Homes (
+	HomesID int identity,
+	StreetNumber varchar(10) not null,
+	StreetName varchar(20) not null,
+	CommunityID int null,
+	BedroomTypeID int null,
+	AmenityProfilesID int null,
+	AskingPrice float not null
+	CONSTRAINT PK_Homes PRIMARY KEY (HomesID),
+	CONSTRAINT FK1_Homes FOREIGN KEY (CommunityID) REFERENCES Community(CommunityID),
+	CONSTRAINT FK2_Homes FOREIGN KEY (BedroomTypeID) REFERENCES BedroomType(BedroomTypeID),
+	CONSTRAINT FK3_Homes FOREIGN KEY (AmenityProfilesID) REFERENCES AmenityProfiles(AmenityProfilesID)
+	);
+	GO
+
+CREATE TABLE AmenityTypeList (
+	AmenityTypeListID int identity,
+	AmenityProfilesID int not null,	
+	HomesID int not null
+	CONSTRAINT PK_AmenityTypeList PRIMARY KEY (AmenityTypeListID),
+	CONSTRAINT FK1_AmenityTypeList FOREIGN KEY (AmenityProfilesID) REFERENCES AmenityProfiles(AmenityProfilesID),
+	CONSTRAINT FK2_AmenityTypeList FOREIGN KEY (HomesID) REFERENCES Homes(HomesID)
+	);
+	GO
+
+CREATE TABLE Owners (
+	OwnersID int identity,
+	ContactID int not null
+	CONSTRAINT PK_Owners PRIMARY KEY (OwnersID),
+	CONSTRAINT FK1_Owners FOREIGN KEY (ContactID) REFERENCES Contact(ContactID)
+	);
+	GO
+
+CREATE TABLE Buyers (
+	BuyersID int identity,
+	ContactID int not null
+	CONSTRAINT PK_Buyers PRIMARY KEY (BuyersID),
+	CONSTRAINT FK1_Buyers FOREIGN KEY (ContactID) REFERENCES Contact(ContactID)
+	);
+	GO
+
+CREATE TABLE SaleTransaction (
+	SaleTransactionID int identity,
+	FinalPrice float,
+	DaysOnMarket int,
+	SaleDate datetime,
+	HomesID int,
+	OwnersID int,
+	BuyersID int
+	CONSTRAINT PK_SaleTransaction PRIMARY KEY (SaleTransactionID),
+	CONSTRAINT FK1_SaleTransaction FOREIGN KEY (HomesID) REFERENCES Homes(HomesID),
+	CONSTRAINT FK2_SaleTransaction FOREIGN KEY (OwnersID) REFERENCES Owners(OwnersID),
+	CONSTRAINT FK3_SaleTransaction FOREIGN KEY (BuyersID) REFERENCES Buyers(BuyersID)
+	);
+	GO
+
+-- Data Creation & Manipulation
+
+-- Insert statements
+-- Create Community records
+INSERT INTO Community(CommunityName, CommunityLocation, NumberHomes, CommunityType)
+VALUES ('Presidential Place', 'Quincy', 10, 'Gated')
+, ('Seaview Cliff', 'Marblehead', 10, 'Adult Active')
+, ('Quaker Village', 'Lincoln', 10, 'Retirement');
+GO
+
+SELECT * FROM Community
+
+-- Create Bedroom Type records
+INSERT INTO BedroomType(NumberBedrooms)
+VALUES ('2 BR')
+, ('3 BR')
+, ('4 BR');
+GO
+
+SELECT * FROM BedroomType
+
+-- Create Contact records
+INSERT INTO Contact(FirstName, LastName, EmailAddress, PhoneNumber)
+VALUES ('Abby', 'Adams', 'AAdams@domain.xyz', '(617) 555-1111')
+, ('Dolly', 'Madison', 'DMadison@domain.xyz', '(617) 555-2222')
+, ('Frank', 'Drake', 'FDrake@domain.xyz', '(617) 555-3333')
+, ('Wally', 'Raleigh', 'WRaleigh@domain.xyz', '(617) 555-4444')
+, ('Judy', 'Dench', 'JDench@domain.xyz', '(617) 555-5555')
+, ('Bonny', 'Raitt', 'BRaitt@domain.xyz', '(617) 555-6666');
+GO
+SELECT * FROM Contact
+
+-- Create AmenityProfiles records
+INSERT INTO AmenityProfiles(AmenityProfileName,NumberCars,SwimmingPool,AdditionalKitchen)
+VALUES ('Basic','2',0,0)
+, ('Deluxe','3',0,1)
+, ('Luxury','4',1,1);
+GO
+
+SELECT * FROM AmenityProfiles
+
+-- Create Homes Records
+INSERT INTO Homes(StreetNumber,StreetName,Homes.BedroomTypeID,Homes.AmenityProfilesID,AskingPrice)
+VALUES 
+('1','Washington Street',1,1,400000)
+, ('3','Washington Street',1,1,400000)
+, ('5','Washington Street',2,2,550000)
+, ('2','Madison Boulevard',2,2,550000)
+, ('4','Madison Boulevard',3,3,700000)
+, ('6','Madison Boulevard',3,3,700000)
+, ('100','Minot Road',1,1,500000)
+, ('300','Minot Road',1,1,500000)
+, ('500','Minot Road',2,2,650000)
+, ('200','Quarterdeck Lane',2,2,650000)
+, ('400','Quarterdeck Lane',3,3,725000)
+, ('400','Quarterdeck Lane',3,3,725000)
+, ('50','Friendship Drive',1,1,350000)
+, ('60','Friendship Drive',1,1,350000)
+, ('70','Friendship Drive',2,2,450000)
+, ('10','Meetinghouse Road',2,2,450000)
+, ('20','Meetinghouse Road',3,3,600000)
+, ('30','Meetinghouse Road',3,3,600000);
+GO
+
+SELECT * FROM Homes
+
+-- Create SalesTeam records
+INSERT INTO SalesTeam (SalesTeamName,CommunityID,ContactID)
+VALUES
+	('Presidential Place Team',(SELECT CommunityID FROM Community WHERE CommunityName = 'Presidential Place'),(SELECT ContactID FROM Contact WHERE LastName = 'Adams')),
+	('Presidential Place Team',(SELECT CommunityID FROM Community WHERE CommunityName = 'Presidential Place'),(SELECT ContactID FROM Contact WHERE LastName = 'Madison')),
+	('Seaview Cliff Team',(SELECT CommunityID FROM Community WHERE CommunityName = 'Seaview Cliff'),(SELECT ContactID FROM Contact WHERE LastName = 'Drake')),
+	('Seaview Cliff Team',(SELECT CommunityID FROM Community WHERE CommunityName = 'Seaview Cliff'),(SELECT ContactID FROM Contact WHERE LastName = 'Raleigh')),
+	('Quaker Village Team',(SELECT CommunityID FROM Community WHERE CommunityName = 'Presidential Place'),(SELECT ContactID FROM Contact WHERE LastName = 'Dench')),
+	('Quaker Village Team',(SELECT CommunityID FROM Community WHERE CommunityName = 'Seaview Cliff'),(SELECT ContactID FROM Contact WHERE LastName = 'Raitt'));
+	GO
+
+SELECT * FROM SalesTeam
+
+-- Create CommunitySalesTeam Records
+INSERT INTO
+	CommunitySalesTeam(CommunityID,SalesTeamID)
+	VALUES (1,1)
+	, (2,2)
+	, (3,3);
+GO
+
+SELECT * FROM CommunitySalesTeam
+
+-- Create Onwers Records
+INSERT INTO 
+	Owners(Owners.ContactID)
+	VALUES
+		((SELECT Contact.ContactID FROM Contact WHERE LastName = 'Adams')),
+		((SELECT Contact.ContactID FROM Contact WHERE LastName = 'Madison')),
+		((SELECT Contact.ContactID FROM Contact WHERE LastName = 'Drake')),
+		((SELECT Contact.ContactID FROM Contact WHERE LastName = 'Dench'))
+		GO
+
+SELECT * FROM Owners
+
+-- Update Homes CommunityID through FK reference to Community table
+UPDATE TGT
+SET CommunityID=SRC.CommunityID
+FROM Homes AS TGT
+INNER JOIN Community AS SRC ON SRC.CommunityName = 'Presidential Place'
+WHERE StreetName = 'Washington Street';
+GO
+
+UPDATE TGT
+SET CommunityID=SRC.CommunityID
+FROM Homes AS TGT
+INNER JOIN Community AS SRC ON SRC.CommunityName = 'Presidential Place'
+WHERE StreetName = 'Madison Boulevard';
+GO
+
+UPDATE TGT
+SET CommunityID=SRC.CommunityID
+FROM Homes AS TGT
+INNER JOIN Community AS SRC ON SRC.CommunityName = 'Seaview Cliff'
+WHERE StreetName = 'Minot Road';
+GO
+
+UPDATE TGT
+SET CommunityID=SRC.CommunityID
+FROM Homes AS TGT
+INNER JOIN Community AS SRC ON SRC.CommunityName = 'Seaview Cliff'
+WHERE StreetName = 'Quarterdeck Lane';
+GO
+
+UPDATE TGT
+SET CommunityID=SRC.CommunityID
+FROM Homes AS TGT
+INNER JOIN Community AS SRC ON SRC.CommunityName = 'Quaker Village'
+WHERE StreetName = 'Friendship Drive';
+GO
+
+UPDATE TGT
+SET CommunityID=SRC.CommunityID
+FROM Homes AS TGT
+INNER JOIN Community AS SRC ON SRC.CommunityName = 'Quaker Village'
+WHERE StreetName = 'Meetinghouse Road';
+GO
+
+SELECT * FROM Community; 
+GO
+SELECT * FROM Homes;
+GO
+SELECT * FROM BedroomType;
+GO
+
+UPDATE TGT
+SET BedroomTypeID=BDR.BedroomTypeID
+FROM Homes AS TGT
+INNER JOIN BedroomType AS BDR ON BDR.NumberBedrooms = '2 BR'
+WHERE StreetName = 'Washington Street' AND StreetNumber = '1';
+GO
+
+UPDATE TGT
+SET BedroomTypeID=BDT.BedroomTypeID
+FROM Homes AS TGT
+INNER JOIN BedroomType AS BDT ON BDT.NumberBedrooms = 2
+WHERE StreetName = 'Meetinghouse Road' AND StreetNumber = '3';
+GO
+
+UPDATE TGT
+SET BedroomTypeID=BDT.BedroomTypeID
+FROM Homes AS TGT
+INNER JOIN BedroomType AS BDT ON BDT.NumberBedrooms = 3
+WHERE StreetName = 'Meetinghouse Road' AND StreetNumber = '5';
+GO
+
+UPDATE TGT
+SET BedroomTypeID=BDT.BedroomTypeID
+FROM Homes AS TGT
+INNER JOIN BedroomType AS BDT ON BDT.NumberBedrooms = 3
+WHERE StreetName = 'Meetinghouse Road' AND StreetNumber = '5';
+GO
+
+SELECT * FROM Homes
+
+-- Create Contact to populate Buyers table
+INSERT INTO Contact(FirstName, LastName, EmailAddress, PhoneNumber)
+VALUES ('Clark', 'Kent', 'CKent@domain.xyz', '(617) 555-7777')
+, ('Diana', 'Prince', 'DPrince@domain.xyz', '(617) 555-8888')
+, ('Bruce', 'Wayne', 'BWayne@domain.xyz', '(617) 555-9999')
+, ('Wally', 'West', 'WWest@domain.xyz', '(617) 555-1010');
+GO
+
+-- Add Buyers Records
+INSERT INTO 
+	Buyers(Buyers.ContactID)
+	VALUES
+		((SELECT Contact.ContactID FROM Contact WHERE LastName = 'Kent')),
+		((SELECT Contact.ContactID FROM Contact WHERE LastName = 'Prince')),
+		((SELECT Contact.ContactID FROM Contact WHERE LastName = 'Wayne')),
+		((SELECT Contact.ContactID FROM Contact WHERE LastName = 'West'))
+		GO
+
+-- Create SaleTransaction Records
+INSERT INTO SaleTransaction(FinalPrice,DaysOnMarket,SaleDate,SaleTransaction.HomesID,SaleTransaction.OwnersID,SaleTransaction.BuyersID)
+VALUES
+	(680000,64,GetDate(),5,1,1)
+	, (380000,53,GetDate(),2,2,2)
+	, (625000,53,GetDate(),9,3,3)
+	, (705000,53,GetDate(),11,4,4)
+GO
+SELECT * FROM SaleTransaction
+
+-- Create Views
+-- Lists Homes showing each's community and bedroom type
+CREATE VIEW dbo.CommunityHomes
+AS
+SELECT
+	CommunityName,
+	StreetNumber,
+	StreetName,
+	AskingPrice,
+	BedroomType.NumberBedrooms
+FROM Homes
+JOIN Community ON Community.CommunityID = Homes.CommunityID
+JOIN BedroomType ON BedroomType.BedroomTypeID = Homes.BedroomTypeID;
+GO
+
+-- Lists contacts designated as Owners
+CREATE VIEW dbo.OwnersList
+AS
+SELECT
+	FirstName AS OwnerFirstName,
+	LastName AS OwnerLastName
+FROM Owners
+JOIN Contact ON Contact.ContactID = Owners.ContactID;
+GO
+
+-- Lists contacts designated as Buyers
+CREATE VIEW dbo.BuyersList
+AS
+SELECT
+	FirstName AS BuyerFirstName,
+	LastName AS BuyerLastName
+FROM Buyers
+JOIN Contact ON Contact.ContactID = Buyers.ContactID;
+GO
+
+-- Lists sale transactions with Asking and Final Price
+CREATE VIEW dbo.Sales
+AS
+SELECT
+	StreetNumber,
+	StreetName,
+	AskingPrice,
+	FinalPrice
+FROM SaleTransaction
+JOIN Homes ON Homes.HomesID = SaleTransaction.HomesID
+GO
+
+-- Lists total value of each community by summing asking price for each one's homes
+CREATE VIEW dbo.TotalAskingPricebyCommunity
+AS
+SELECT
+	CommunityName
+	, SUM(AskingPrice) AS AskingPriceTotal
+	, COUNT(HomesID) AS CountOfHomes
+FROM
+	Homes
+RIGHT JOIN Community ON Community.CommunityID = Homes.CommunityID
+GROUP BY CommunityName
+GO
+
+-- Lists number of bedroom type units per community
+CREATE VIEW dbo.HomesInventorybyBathrooms
+AS
+SELECT
+	CommunityName
+	, NumberBedrooms
+	, COUNT(Homes.BedroomTypeID) AS CountOfBedroomTypes
+	, SUM(AskingPrice) AS AskingPriceTotal
+FROM
+	Homes
+RIGHT JOIN BedroomType ON BedroomType.BedroomTypeID = Homes.BedroomTypeID
+RIGHT JOIN Community ON Community.CommunityID = Homes.CommunityID
+GROUP BY CommunityName
+, NumberBedrooms;
+GO
+
+-- Lists sale transactions with Asking and Final Price
+CREATE VIEW dbo.TotalSales
+AS
+SELECT
+	StreetNumber,
+	StreetName,
+	CommunityName,
+	NumberBedrooms,
+	AskingPrice,
+	FinalPrice
+FROM
+	SaleTransaction
+INNER JOIN Homes ON Homes.HomesID = SaleTransaction.HomesID
+INNER JOIN BedroomType ON BedroomType.BedroomTypeID = Homes.BedroomTypeID
+INNER JOIN Community ON Community.CommunityID = Homes.CommunityID
+GO
