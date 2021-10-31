@@ -21,7 +21,7 @@ The Applied Data Science program at Syracuse University's School of Information 
 2. [MarkRobertsResume.pdf](https://github.com/dodekete/MSADS_Portfolio/blob/main/MR%20Resume%202021.pdf)
     - Current Resume
 
-3. [MarkRobertsPortfolioMilestone.pdf](TBD)
+3. [MarkRobertsPortfolioMilestone.pdf](https://github.com/dodekete/MSADS_Portfolio/blob/main/MSADS_PortfolioMilestone_Deliverable1_RobertsMark.pdf)
     - Written Portfolio Milestone Report
 
 4. Referenced Course Projects and Assignments
