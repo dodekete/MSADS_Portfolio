@@ -1,0 +1,108 @@
+/**Exercise 1**/
+SELECT product_id, product_name,
+	CASE CHARINDEX(' ', product_name)
+		WHEN 0 THEN product_name
+		ELSE RIGHT(product_name, CHARINDEX(' ',REVERSE(product_name)) -1)
+	END AS product_category
+FROM fudgemart_products;
+go
+
+
+/**Exercise 2**/
+DROP FUNCTION IF EXISTS dbo.f_total_vendor_sales
+GO
+
+CREATE FUNCTION  f_total_vendor_sales(
+					@vendor_id FLOAT
+					)
+RETURNS FLOAT AS
+	BEGIN
+	   DECLARE @ret FLOAT
+	   SET @ret = (
+					SELECT SUM(t.product_wholesale_price * o.order_qty)
+					FROM fudgemart_vendors AS f
+					FULL OUTER JOIN fudgemart_products AS t 
+						ON (f.vendor_id = t.product_vendor_id)
+					FULL OUTER JOIN fudgemart_order_details AS o 
+						ON (o.product_id = t.product_id)
+					WHERE f.vendor_id = @vendor_id
+				)
+
+		RETURN @ret
+
+	END            
+
+GO
+
+SELECT vendor_name,dbo.f_total_vendor_sales (vendor_id) AS Total_Sales
+FROM fudgemart_vendors
+ORDER BY vendor_name
+
+GO
+
+/**Exercise 3**/
+IF OBJECT_ID('dbo.p_write_vendor') IS NOT NULL
+	DROP PROCEDURE dbo.p_write_vendor
+GO
+
+
+CREATE PROCEDURE dbo.p_write_vendor(
+					@vendor_name VARCHAR,
+					@phone VARCHAR,
+					@website VARCHAR
+				)
+AS
+BEGIN
+
+	IF EXISTS( SELECT * FROM fudgemart_vendors WHERE vendor_name = @vendor_name)
+		UPDATE dbo.fudgemart_vendors
+		SET vendor_phone = @phone,
+			vendor_website = @website
+		WHERE vendor_name = @vendor_name
+	ELSE
+		INSERT dbo.fudgemart_vendors (vendor_name,vendor_phone,vendor_website)
+		VALUES (@vendor_name, @phone, @website)
+	
+END
+GO
+
+/**Exercise 4**/
+DROP VIEW IF EXISTS  dbo.vw_vendor_sales
+GO
+
+CREATE VIEW dbo.vw_vendor_sales
+	AS(
+	SELECT vendor_name,dbo.f_total_vendor_sales (vendor_id) AS Total_Sales
+	FROM fudgemart_vendors
+
+	)
+
+GO
+
+SELECT * FROM dbo.vw_vendor_sales
+
+EXEC dbo.p_write_vendor 'Vendor name', '92234555', 'www.syr.edu'
+GO
+
+/**Exercise 5**/
+DROP FUNCTION IF EXISTS dbo.f_employee_timesheets
+
+GO
+
+CREATE FUNCTION dbo.f_employee_timesheets(
+	@employee_id INT
+)
+RETURNS TABLE
+AS
+	RETURN (
+					SELECT e.employee_id, e.employee_lastname, e.employee_firstname, e.employee_department, t.timesheet_payrolldate,
+					t.timesheet_hours * t.timesheet_hourlyrate AS grosspay
+					FROM fudgemart_employee_timesheets AS t
+					INNER JOIN fudgemart_employees AS e ON e.employee_id = t.timesheet_employee_id
+					WHERE e.employee_id = @employee_id
+
+	);
+ GO
+
+
+

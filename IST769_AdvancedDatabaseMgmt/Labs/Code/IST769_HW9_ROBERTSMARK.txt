@@ -1,0 +1,60 @@
+-- Exercise 1
+CREATE KEYSPACE stox with replication = {'class': 'SimpleStrategy', 'replication_factor': '3'};
+describe KEYSPACES;
+use stox;
+
+CREATE KEYSPACE spotify with replication = {'class': 'SimpleStrategy', 'replication_factor': '3'};
+describe KEYSPACES;
+use spotify;
+
+
+-- Exercise 2
+CREATE TABLE stocks (symbol text, company_name text, PRIMARY KEY(symbol));
+describe table stocks;
+INSERT INTO stocks (symbol, company_name) VALUES ('AAPL', 'Apple');
+INSERT INTO stocks (symbol, company_name) VALUES ('NVDA', 'Nvidia');
+INSERT INTO stocks (symbol, company_name) VALUES ('AMZN', 'Amazon');
+INSERT INTO stocks (symbol, company_name) VALUES ('EMPH', 'Enphase');
+INSERT INTO stocks (symbol, company_name) VALUES ('DIS', 'Disney');
+INSERT INTO stocks (symbol, company_name) VALUES ('MSFT', 'Microsoft');
+INSERT INTO stocks (symbol, company_name) VALUES ('AMD', 'AMD');
+INSERT INTO stocks (symbol, company_name) VALUES ('JPM', 'JP Morgan Chase');
+INSERT INTO stocks (symbol, company_name) VALUES ('CSCO', 'Cisco');
+SELECT * FROM stocks;
+
+CREATE TABLE playlist (artist text, song text, PRIMARY KEY(artist));
+describe table playlist;
+INSERT INTO playlist (artist, song) VALUES ('Throwing Muses', 'Sunray Venus');
+INSERT INTO playlist (artist, song) VALUES ('Radiohead', 'Paranoid Android');
+INSERT INTO playlist (artist, song) VALUES ('Tegan and Sara', 'Closer');
+INSERT INTO playlist (artist, song) VALUES ('Bettie Serveert', 'Brain Tag');
+INSERT INTO playlist (artist, song) VALUES ('Sleater-Kinney', 'No Cities to Love');
+INSERT INTO playlist (artist, song) VALUES ('Belly', 'Feed the Tree');
+SELECT * FROM playlist;
+
+
+-- Exercise 3
+CREATE TABLE stock_quotes (exchange text, symbol text, offered_on timestamp, bid_price float, ask_price float, PRIMARY KEY (symbol, offered on));
+INSERT INTO stock_quotes (exchange, symbol, offered_on, bid_price, ask_price) VALUES ('NSDQ', 'AAPL', '2019-11-01 10:00', 250.00, 251.00);
+INSERT INTO stock_quotes (exchange, symbol, offered_on, bid_price, ask_price) VALUES ('NSDQ', 'AAPL', '2019-11-01 10:05', 250.00, 251.00);
+INSERT INTO stock_quotes (exchange, symbol, offered_on, bid_price, ask_price) VALUES ('NSDQ', 'AAPL', '2019-11-01 10:10', 250.00, 251.00);
+INSERT INTO stock_quotes (exchange, symbol, offered_on, bid_price, ask_price) VALUES ('NSDQ', 'AAPL', '2019-11-01 10:15', 250.00, 251.00);
+INSERT INTO stock_quotes (exchange, symbol, offered_on, bid_price, ask_price) VALUES ('NSDQ', 'AAPL', '2019-11-01 10:20', 250.00, 251.00);
+INSERT INTO stock_quotes (exchange, symbol, offered_on, bid_price, ask_price) VALUES ('NSDQ', 'AAPL', '2019-11-01 10:25', 250.00, 251.00);
+INSERT INTO stock_quotes (exchange, symbol, offered_on, bid_price, ask_price) VALUES ('NSDQ', 'AAPL', '2019-11-01 10:30', 250.00, 251.00);
+INSERT INTO stock_quotes (exchange, symbol, offered_on, bid_price, ask_price) VALUES ('NSDQ', 'AAPL', '2019-11-01 10:35', 250.00, 251.00);
+INSERT INTO stock_quotes (exchange, symbol, offered_on, bid_price, ask_price) VALUES ('NSDQ', 'AAPL', '2019-11-01 10:40', 250.00, 251.00);
+INSERT INTO stock_quotes (exchange, symbol, offered_on, bid_price, ask_price) VALUES ('NSDQ', 'AAPL', '2019-11-01 10:00', 250.00, 251.00);
+SELECT * FROM stock_quotes WHERE bid_price>250;
+SELECT * FROM stock_quotes WHERE bid_price>250 ALLOW FILTERING;
+
+-- Exercise 4
+CREATE INDEX ix_stock_quotes on stox.stock_quotes (bid_price);
+SELECT * FROM stock_quotes WHERE bid_price>250;
+SELECT * FROM stock_quotes WHERE bid_price=250;
+SELECT * FROM stock_quotes WHERE ask_price>250;
+
+-- Exercise 5
+DROP MATERIALIZED VIEW IF EXISTS stock_quotes_by_ask_price;
+CREATE MATERIALIZED VIEW stock_quotes_by_ask_price AS SELECT * FROM stock_quotes WHERE symbol IS NOT NULL AND offered_on IS NOT NULL AND ask_price IS NOT NULL PRIMARY KEY (symbol, offered_on, ask_price);
+SELECT * FROM stock_quotes_by_ask_price WHERE symbol='AAPL' AND offered_on >= '2019-11-01';

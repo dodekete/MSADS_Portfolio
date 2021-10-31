@@ -1,0 +1,37 @@
+-- Exercise 1
+docker-compose up -d
+docker-compose exec mongo mongoimport -u admin -p pass --authenticationDatabase=admin -d demo -c countries--file=Europe.json --jsonarray 
+docker-compose exec mongo mongo -u admin -p pass --authenticationDatabase=admin
+db.adminCommand({listDatabases:1, nameOnly:true})
+use demo
+db.runCommand({listCollections: 1.0, nameOnly:true});
+db.countries.findOne();
+db.countries.findOne({},{name:1,population:1,capital:1});
+db.countries.find({),{name:1,population:1,capital:1});
+
+-- Exercise 2
+db.countries.find({population: {$lt:500000}},{name:1,population:1,capital:1}).sort({population:1})
+
+-- Exercise 3
+db.countries.find({population: {$lt:500000}},{name:1,population:1,capital:1}).sort({population:-1}).explain("executionStats")
+db.countries.createIndes({population:1})
+
+-- Exercise 4
+cd redis
+docker-compose up -d
+docker-compose exec redis redis-cli
+hmset product:1 Name "Apple" QtyOnHand 7 UnitPrice "2.49"
+hmset product:1 Name "Banana" QtyOnHand 12 UnitPrice "1.99"
+hmset product:1 Name "Cherry" QtyOnHand 9 UnitPrice "4.99"
+hmget product:1 Name QtyOnHand UnitPrice
+hmget product:2 Name QtyOnHand UnitPrice
+hmget product:3 Name QtyOnHand UnitPrice
+hexists product:3 Name
+hgetall product:2
+
+-- Exercise 5
+zadd competition:goldensnowball:2018 97 Syracuse 68 Rochester 84 Buffalo
+zrange competition:goldensnowball:2018 0 -1
+zrange competition:goldensnowball:2018 0 -1 withscores
+zadd competition:goldensnowball:2018 incr 10 Buffalo
+zrange competition:goldensnowball:2019 0 -1 withscores

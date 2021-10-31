@@ -1,0 +1,135 @@
+-- preparation
+USE fudgemart_V3
+GO
+
+DROP TABLE IF EXISTS demo.dbo.timesheets;
+GO
+
+SELECT * INTO demo.dbo.timesheets
+FROM fudgemart_v3.dbo.fudgemart_employees INNER JOIN fudgemart_v3.dbo.fudgemart_employee_timesheets
+ON employee_id = timesheet_employee_id;
+GO
+
+--Exercise 1
+SELECT employee_id, employee_firstname, employee_lastname,
+	SUM(timesheet_hourlyrate*timesheet_hours) AS total_hours
+FROM	demo.dbo.timesheets
+GROUP BY employee_id,employee_firstname,employee_lastname;
+GO
+
+--Nonclustered Index
+DROP INDEX IF EXISTS dbo.timesheets.timesheets_IX1
+CREATE INDEX timesheets_IX1 
+	ON demo.dbo.timesheets (employee_id)
+INCLUDE  (employee_firstname, employee_lastname, timesheet_hourlyrate,timesheet_hours)
+GO
+
+--Exercise 2
+--Index Scan - PK not provided in WHERE
+SELECT  employee_id
+		, employee_firstname
+		, employee_lastname
+		, sum(timesheet_hourlyrate*timesheet_hours)
+FROM demo.dbo.timesheets 
+GROUP BY employee_id, employee_firstname, employee_lastname;
+GO
+
+--Index Seek - PK provided
+SELECT  employee_id
+		, employee_firstname
+		, employee_lastname
+		, sum(timesheet_hourlyrate*timesheet_hours)
+FROM demo.dbo.timesheets 
+WHERE employee_id IN (1,2,3,4)
+GROUP BY employee_id, employee_firstname, employee_lastname;
+GO
+
+--Table Scan
+SELECT  employee_department
+		, sum(timesheet_hours) AS total_hours
+FROM demo.dbo.timesheets 
+GROUP BY employee_department;
+GO
+
+SELECT  employee_department
+		, sum(timesheet_hours) AS total_hours
+FROM demo.dbo.timesheets 
+GROUP BY employee_department;
+GO
+
+DROP INDEX IF EXISTS dbo.timesheets.timesheets_IX1
+
+--Exercise 3 Columnstore Index
+USE demo
+GO
+DROP INDEX IF EXISTS timesheets_IX2 ON dbo.timesheets
+GO
+
+CREATE NONCLUSTERED COLUMNSTORE INDEX timesheets_IX2
+	ON demo.dbo.timesheets (
+		employee_jobtitle
+		, employee_department
+		, timesheet_hourlyrate
+		, timesheet_hours
+);
+GO
+
+SELECT employee_department
+	, SUM(timesheet_hours) AS total_hours
+	FROM demo.dbo.timesheets 
+	GROUP BY employee_department;
+GO
+
+SELECT employee_jobtitle
+	, AVG(timesheet_hourlyrate) 
+FROM demo.dbo.timesheets 
+GROUP BY employee_jobtitle;
+GO
+
+-- Exercise 4
+USE demo
+GO
+DROP VIEW IF EXISTS dbo.v_employees;
+
+CREATE VIEW dbo.v_employees WITH SCHEMABINDING 
+	AS
+	SELECT employee_id
+		, employee_firstname
+		, employee_lastname
+		, employee_jobtitle
+		, employee_department
+		, COUNT_BIG(*) AS timesheet_count
+	FROM dbo.timesheets
+	GROUP BY employee_id, employee_firstname, employee_lastname, employee_jobtitle, employee_department;
+GO
+
+DROP INDEX IF EXISTS v_employees.v_employees_IX1
+GO
+
+CREATE UNIQUE CLUSTERED INDEX v_employees_IX1 ON dbo.v_employees (employee_id)
+GO
+
+SELECT * FROM dbo.v_employees;
+GO
+
+SELECT employee_id
+		, employee_firstname
+		, employee_lastname
+		, COUNT(*) AS timesheet_count
+		, SUM(timesheet_hours) AS hours_total
+		, AVG(timesheet_hourlyrate) AS hourlyrate_average
+FROM dbo.timesheets
+GROUP BY employee_id, employee_firstname, employee_lastname;
+GO
+
+SELECT 
+	employee_id, 
+	employee_firstname, 
+	employee_lastname, 
+	COUNT(timesheet_id) AS counts, 
+	SUM(timesheet_hours) AS total_hours,
+	AVG(timesheet_hourlyrate) AS avgrate
+FROM timesheets
+GROUP BY employee_id, employee_firstname, employee_lastname
+FOR JSON AUTO
+GO
