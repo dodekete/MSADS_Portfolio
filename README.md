@@ -32,3 +32,7 @@ The Applied Data Science program at Syracuse University's School of Information 
     * [IST 652: Scripting for Data Science](https://github.com/dodekete/MSADS_Portfolio/tree/main/IST652_Scripting)
    
     * [IST 769: Advanced Database Management](https://github.com/dodekete/MSADS_Portfolio/tree/main/IST769_AdvancedDatabaseMgmt/Labs)
+
+5. Portfolio Presentation
+
+6. [Portfolio Presentation Slide Deck](https://github.com/dodekete/MSADS_Portfolio/blob/main/MSDS_PresentationDeck_MarkRoberts.pdf)
